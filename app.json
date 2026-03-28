@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "gym-log-train",
+    "name": "GymLogTrain",
     "slug": "gym-log-train",
+    "scheme": "gymlogtrain",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,6 +26,23 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "b40f0d15-6aad-46f4-9cc9-ee5dea647f12"
+      }
+    },
+    "owner": "damianinn"
   }
 }
