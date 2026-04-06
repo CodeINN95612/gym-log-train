@@ -5,6 +5,8 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   static const _repoUrl = 'https://github.com/CodeINN95612/gym-log-train';
+  static const _siteUrl = 'https://codeirnn95612.github.io/gym-log-train';
+  static const _privacyUrl = 'https://codeirnn95612.github.io/gym-log-train/privacy-policy';
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,28 @@ class AboutScreen extends StatelessWidget {
                   mode: LaunchMode.externalApplication,
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    child: const Text('Website'),
+                    onPressed: () => launchUrl(
+                      Uri.parse(_siteUrl),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                  Text('·', style: TextStyle(color: scheme.outlineVariant)),
+                  TextButton(
+                    child: const Text('Privacy Policy'),
+                    onPressed: () => launchUrl(
+                      Uri.parse(_privacyUrl),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
               Text(
                 'v1.1.0',
                 style: Theme.of(context)
