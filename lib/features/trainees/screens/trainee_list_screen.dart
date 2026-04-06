@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/trainee_provider.dart';
+import '../../about/screens/about_screen.dart';
 import 'add_trainee_screen.dart';
 import 'trainee_overview_screen.dart';
 
@@ -25,7 +26,22 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
     final provider = context.watch<TraineeProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Trainees')),
+      appBar: AppBar(
+        title: const Text('Trainees'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'about') {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AboutScreen()));
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'about', child: Text('About')),
+            ],
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
