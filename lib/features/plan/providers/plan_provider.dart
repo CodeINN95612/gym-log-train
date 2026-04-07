@@ -105,6 +105,21 @@ class PlanProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> cloneFrom(int fromTraineeId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final repo = await _getRepo();
+      await repo.clonePlan(fromTraineeId, traineeId);
+      await load();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> removeExercise(int planDayExerciseId, int planDayId) async {
     try {
       final repo = await _getRepo();

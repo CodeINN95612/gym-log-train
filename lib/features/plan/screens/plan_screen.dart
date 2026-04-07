@@ -5,6 +5,7 @@ import '../../../core/utils/date_utils.dart' as du;
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/exercise_picker_sheet.dart';
 import '../providers/plan_provider.dart';
+import 'clone_plan_sheet.dart';
 
 class PlanScreen extends StatefulWidget {
   final Trainee trainee;
@@ -25,6 +26,13 @@ class _PlanScreenState extends State<PlanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('${widget.trainee.name}\'s Plan'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.copy_all_outlined),
+            tooltip: 'Clone from another trainee',
+            onPressed: () => showClonePlanSheet(context, widget.trainee),
+          ),
+        ],
       ),
       body: Column(
         children: [

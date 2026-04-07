@@ -73,4 +73,62 @@ class PlanRepository {
     );
     return result.first['cnt'] as int;
   }
+
+  /// Returns a map of traineeId → list of {weekday, exercise_count} for every
+  /// trainee that has at least one plan day configured.
+  Future<Map<int, List<Map<String, int>>>> getPlanSummariesAll() async {
+    final rows = await db.rawQuery('''
+      SELECT pd.trainee_id, pd.weekday, COUNT(pde.id) AS exercise_count
+      FROM plan_days pd
+      LEFT JOIN plan_day_exercises pde ON pde.plan_day_id = pd.id
+      GROUP BY pd.trainee_id, pd.weekday
+      ORDER BY pd.trainee_id, pd.weekday
+    ''');
+    final result = <int, List<Map<String, int>>>{};
+    for (final row in rows) {
+      final tid = row['trainee_id'] as int;
+      result.putIfAbsent(tid, () => []).add({
+        'weekday': row['weekday'] as int,
+        'count': row['exercise_count'] as int,
+      });
+    }
+    return result;
+  }
+
+  /// Copies all plan days and exercises from [fromTraineeId] to [toTraineeId],
+  /// replacing whatever the target trainee currently has.
+  Future<void> clonePlan(int fromTraineeId, int toTraineeId) async {
+    await db.transaction((txn) async {
+      // Delete existing plan for target (cascades to plan_day_exercises)
+      await txn.delete(
+          'plan_days', where: 'trainee_id = ?', whereArgs: [toTraineeId]);
+
+      // Copy each source day
+      final sourceDays = await txn.query('plan_days',
+          where: 'trainee_id = ?',
+          whereArgs: [fromTraineeId],
+          orderBy: 'weekday ASC');
+
+      for (final day in sourceDays) {
+        final newDayId = await txn.insert('plan_days', {
+          'trainee_id': toTraineeId,
+          'weekday': day['weekday'],
+          'label': day['label'],
+        });
+
+        final exercises = await txn.query('plan_day_exercises',
+            where: 'plan_day_id = ?',
+            whereArgs: [day['id']],
+            orderBy: 'order_index ASC');
+
+        for (final ex in exercises) {
+          await txn.insert('plan_day_exercises', {
+            'plan_day_id': newDayId,
+            'exercise_id': ex['exercise_id'],
+            'order_index': ex['order_index'],
+          });
+        }
+      }
+    });
+  }
 }
