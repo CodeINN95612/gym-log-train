@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/trainee_provider.dart';
+import '../../../core/services/export_import_service.dart';
+import '../../../shared/widgets/import_preview_dialog.dart';
 import '../../about/screens/about_screen.dart';
 import 'add_trainee_screen.dart';
 import 'trainee_overview_screen.dart';
@@ -21,6 +23,97 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
     });
   }
 
+  Future<void> _handleExportAll() async {
+    try {
+      await ExportImportService().exportAllTrainees();
+    } on ExportException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Export failed: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    }
+  }
+
+  Future<void> _handleImport() async {
+    ImportPreview? preview;
+    try {
+      preview = await ExportImportService().pickAndPreviewImport();
+    } on ImportException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Could not read file: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+
+    if (preview == null || !mounted) return;
+
+    final confirmed = await showImportPreviewDialog(context, preview);
+    if (!confirmed || !mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Text('Importing…'),
+        ]),
+      ),
+    );
+
+    ImportResult result;
+    try {
+      result = await ExportImportService().executeImport(preview);
+    } on ImportException catch (e) {
+      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Import failed: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    } catch (e) {
+      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+
+    if (mounted) Navigator.pop(context);
+    if (mounted) context.read<TraineeProvider>().load();
+
+    if (mounted) {
+      final exMsg = result.exercisesCreated > 0
+          ? ', created ${result.exercisesCreated} exercise(s)'
+          : '';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Imported ${result.traineesImported} trainee(s)$exMsg.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TraineeProvider>();
@@ -30,13 +123,39 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
         title: const Text('Trainees'),
         actions: [
           PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'about') {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const AboutScreen()));
+            onSelected: (value) async {
+              switch (value) {
+                case 'export_all':
+                  await _handleExportAll();
+                case 'import':
+                  await _handleImport();
+                case 'about':
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AboutScreen()),
+                    );
+                  }
               }
             },
             itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'export_all',
+                child: ListTile(
+                  leading: Icon(Icons.upload_file),
+                  title: Text('Export All'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'import',
+                child: ListTile(
+                  leading: Icon(Icons.download),
+                  title: Text('Import'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuDivider(),
               PopupMenuItem(value: 'about', child: Text('About')),
             ],
           ),

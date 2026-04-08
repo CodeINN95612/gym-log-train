@@ -12,6 +12,8 @@ import '../../progress/providers/progress_provider.dart';
 import '../../progress/screens/progress_screen.dart';
 import '../providers/trainee_provider.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
+import '../../../core/services/export_import_service.dart';
+import '../../../shared/widgets/import_preview_dialog.dart';
 
 class TraineeOverviewScreen extends StatelessWidget {
   final Trainee trainee;
@@ -39,6 +41,96 @@ class _TraineeOverviewBody extends StatelessWidget {
 
   const _TraineeOverviewBody({required this.trainee});
 
+  Future<void> _handleExport(BuildContext context) async {
+    try {
+      await ExportImportService().exportTrainee(trainee.id!);
+    } on ExportException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Export failed: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+    }
+  }
+
+  Future<void> _handleImport(BuildContext context) async {
+    ImportPreview? preview;
+    try {
+      preview = await ExportImportService().pickAndPreviewImport();
+    } on ImportException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Could not read file: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+
+    if (preview == null || !context.mounted) return;
+
+    final confirmed = await showImportPreviewDialog(context, preview);
+    if (!confirmed || !context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(children: [
+          CircularProgressIndicator(),
+          SizedBox(width: 16),
+          Text('Importing…'),
+        ]),
+      ),
+    );
+
+    ImportResult result;
+    try {
+      result = await ExportImportService().executeImport(preview);
+    } on ImportException catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Import failed: ${e.message}'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Unexpected error: $e'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+
+    if (context.mounted) Navigator.pop(context);
+    if (context.mounted) {
+      final exMsg = result.exercisesCreated > 0
+          ? ', created ${result.exercisesCreated} exercise(s)'
+          : '';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Imported ${result.traineesImported} trainee(s)$exMsg.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final planProvider = context.watch<PlanProvider>();
@@ -50,6 +142,16 @@ class _TraineeOverviewBody extends StatelessWidget {
       appBar: AppBar(
         title: Text(trainee.name),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            tooltip: 'Export trainee',
+            onPressed: () => _handleExport(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Import trainee',
+            onPressed: () => _handleImport(context),
+          ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             tooltip: 'Delete trainee',
