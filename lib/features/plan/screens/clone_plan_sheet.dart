@@ -183,7 +183,7 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
                         ? const Icon(Icons.arrow_forward_ios, size: 16)
                         : null,
                     enabled: hasplan,
-                    onTap: hasplan ? () => _clone(context, trainee) : null,
+                    onTap: hasplan ? () => _clone(trainee) : null,
                   );
                 },
               ),
