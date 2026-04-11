@@ -1,0 +1,201 @@
+{
+  "@@locale": "en",
+
+  "navTrainees": "Trainees",
+  "navExercises": "Exercises",
+
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "clone": "Clone",
+  "edit": "Edit",
+  "seeAll": "See All",
+  "loadingEllipsis": "Loading…",
+
+  "menuExportAll": "Export All",
+  "menuImport": "Import",
+  "menuSettings": "Settings",
+  "menuAbout": "About",
+  "noTrainees": "No trainees yet.\nTap + to add one.",
+
+  "exportFailed": "Export failed: {message}",
+  "@exportFailed": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "unexpectedError": "Unexpected error: {error}",
+  "@unexpectedError": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "couldNotReadFile": "Could not read file: {message}",
+  "@couldNotReadFile": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "importFailed": "Import failed: {message}",
+  "@importFailed": {
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "importing": "Importing…",
+  "importSuccess": "Imported {count} trainee(s){exercises}.",
+  "@importSuccess": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "exercises": { "type": "String" }
+    }
+  },
+  "importCreatedExercises": ", created {count} exercise(s)",
+  "@importCreatedExercises": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "importPreviewTitle": "Import Preview",
+  "importPreviewTrainees": "{count} trainee(s) will be imported:",
+  "@importPreviewTrainees": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPreviewAndMore": "and {count} more…",
+  "@importPreviewAndMore": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPreviewNoExercises": "No exercises referenced.",
+  "importPreviewNewExercises": "{count} new exercise(s) will be created:",
+  "@importPreviewNewExercises": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPreviewExistingExercises": "{count} exercise(s) already exist and will be reused:",
+  "@importPreviewExistingExercises": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importPreviewWarning": "This cannot be undone.",
+  "importButton": "Import",
+
+  "tooltipExportTrainee": "Export trainee",
+  "tooltipImportTrainee": "Import trainee",
+  "tooltipDeleteTrainee": "Delete trainee",
+  "deleteTraineeTitle": "Delete Trainee",
+  "deleteTraineeContent": "Delete \"{name}\" and all their sessions and plan data? This cannot be undone.",
+  "@deleteTraineeContent": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "startSession": "Start Session",
+  "progress": "Progress",
+  "weeklyPlan": "Weekly Plan",
+  "recentSessions": "Recent Sessions",
+  "noSessionsYet": "No sessions yet.",
+  "inProgress": "In Progress",
+  "completed": "Completed",
+  "active": "Active",
+  "rest": "Rest",
+  "exerciseCount": "{count, plural, =1{1 exercise} other{{count} exercises}}",
+  "@exerciseCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "newTrainee": "New Trainee",
+  "fieldName": "Name *",
+  "fieldNameRequired": "Name is required",
+  "fieldNotes": "Notes",
+
+  "appBarExercises": "Exercises",
+  "searchExercises": "Search exercises…",
+  "filterAll": "All",
+  "noExercisesFound": "No exercises found.\nTap + to add one.",
+
+  "newExercise": "New Exercise",
+  "fieldMovementPattern": "Movement pattern",
+  "hintMovementPattern": "e.g. Push, Pull, Hinge…",
+  "fieldMuscleFocus": "Muscle focus",
+  "hintMuscleFocus": "e.g. Chest, Quads, Hamstrings…",
+  "duplicateExercise": "An exercise named \"{name}\" already exists.",
+  "@duplicateExercise": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "newExerciseButton": "New",
+  "noExercisesInPicker": "No exercises found",
+
+  "newSessionTitle": "New Session — {weekday}",
+  "@newSessionTitle": {
+    "placeholders": { "weekday": { "type": "String" } }
+  },
+  "todaysPlan": "Today's Plan",
+  "useTodaysPlan": "Use Today's Plan",
+  "adHocSession": "Ad-hoc Session",
+  "adHocDescription": "Start with an empty session and add exercises as you go.",
+  "startBlankSession": "Start Blank Session",
+
+  "sessionTitle": "Session {date}",
+  "@sessionTitle": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "sessionTitleGeneric": "Session",
+  "sessionInProgress": "● In Progress",
+  "sessionCompleted": "✓ Completed",
+  "tooltipDeleteSession": "Delete session",
+  "deleteSessionTitle": "Delete Session",
+  "deleteSessionContent": "Delete this session and all its logged sets? This cannot be undone.",
+  "noExercisesInSession": "No exercises added yet.\nTap \"Add Exercise\" to start.",
+  "addExercise": "Add Exercise",
+  "endSession": "End Session",
+  "endSessionContent": "Mark this session as completed?",
+
+  "sessionHistoryTitle": "{name}'s Sessions",
+  "@sessionHistoryTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noSessionsRecorded": "No sessions recorded yet.",
+
+  "progressTitle": "{name}'s Progress",
+  "@progressTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noSessionData": "No session data yet.",
+  "statSessions": "Sessions",
+  "statExercises": "Exercises",
+  "statSince": "Since",
+  "personalRecords": "Personal Records",
+  "exerciseProgressTitle": "Exercise Progress",
+  "metricWeight": "Weight",
+  "metricReps": "Reps",
+  "metricEstimated1rm": "Est. 1RM",
+  "metricDuration": "Duration",
+  "noDataForMetric": "No data for this metric.",
+
+  "planTitle": "{name}'s Plan",
+  "@planTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "tooltipClonePlan": "Clone from another trainee",
+  "planInstruction": "Tap an inactive day to enable it. Tap an active day to expand/collapse.",
+  "removeDay": "Remove Day",
+  "removeDayContent": "Remove {day} from the plan?",
+  "@removeDayContent": {
+    "placeholders": { "day": { "type": "String" } }
+  },
+
+  "clonePlanTitle": "Clone plan from…",
+  "clonePlanSubtitle": "Replaces {name}'s current plan.",
+  "@clonePlanSubtitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noPlanConfigured": "No plan configured",
+  "noOtherTrainees": "No other trainees found.",
+  "clonePlanDialogTitle": "Clone plan?",
+  "clonePlanDialogContent": "This will replace {target}'s entire plan with {source}'s plan.",
+  "@clonePlanDialogContent": {
+    "placeholders": {
+      "target": { "type": "String" },
+      "source": { "type": "String" }
+    }
+  },
+
+  "appBarAbout": "About",
+  "aboutDescription": "A simple tool for personal trainers\nto track their trainees' progress.",
+  "starOnGithub": "Star on GitHub",
+  "website": "Website",
+  "privacyPolicy": "Privacy Policy",
+
+  "appBarSettings": "Settings",
+  "settingsLanguage": "Language",
+  "langEnglish": "English",
+  "langSpanish": "Español"
+}

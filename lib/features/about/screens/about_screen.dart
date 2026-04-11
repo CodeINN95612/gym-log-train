@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -10,10 +11,11 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(title: Text(l10n.appBarAbout)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -30,7 +32,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'A simple tool for personal trainers\nto track their trainees\' progress.',
+                l10n.aboutDescription,
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme
@@ -40,7 +42,7 @@ class AboutScreen extends StatelessWidget {
               const SizedBox(height: 40),
               OutlinedButton.icon(
                 icon: const Icon(Icons.star_outline),
-                label: const Text('Star on GitHub'),
+                label: Text(l10n.starOnGithub),
                 onPressed: () => launchUrl(
                   Uri.parse(_repoUrl),
                   mode: LaunchMode.externalApplication,
@@ -51,7 +53,7 @@ class AboutScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextButton(
-                    child: const Text('Website'),
+                    child: Text(l10n.website),
                     onPressed: () => launchUrl(
                       Uri.parse(_siteUrl),
                       mode: LaunchMode.externalApplication,
@@ -59,7 +61,7 @@ class AboutScreen extends StatelessWidget {
                   ),
                   Text('·', style: TextStyle(color: scheme.outlineVariant)),
                   TextButton(
-                    child: const Text('Privacy Policy'),
+                    child: Text(l10n.privacyPolicy),
                     onPressed: () => launchUrl(
                       Uri.parse(_privacyUrl),
                       mode: LaunchMode.externalApplication,
@@ -69,7 +71,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'v1.1.0',
+                'v1.5.0',
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall

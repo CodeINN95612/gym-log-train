@@ -8,12 +8,12 @@ class ExerciseProvider extends ChangeNotifier {
   List<Exercise> _exercises = [];
   bool _isLoading = false;
   String? _error;
-  String? _duplicateError;
+  bool _isDuplicate = false;
 
   List<Exercise> get exercises => _exercises;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  String? get duplicateError => _duplicateError;
+  bool get isDuplicate => _isDuplicate;
 
   ExerciseRepository? _repo;
 
@@ -25,13 +25,13 @@ class ExerciseProvider extends ChangeNotifier {
     return _repo!;
   }
 
-  Future<void> load({String? search, String? category}) async {
+  Future<void> load({String? search, String? category, String language = 'en'}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     try {
       final repo = await _getRepo();
-      _exercises = await repo.getAll(search: search, category: category);
+      _exercises = await repo.getAll(search: search, category: category, language: language);
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -40,8 +40,13 @@ class ExerciseProvider extends ChangeNotifier {
     }
   }
 
-  Future<Exercise?> addExercise(String name, String? category, String? muscleFocus) async {
-    _duplicateError = null;
+  Future<Exercise?> addExercise(
+    String name,
+    String? category,
+    String? muscleFocus, {
+    String language = 'en',
+  }) async {
+    _isDuplicate = false;
     try {
       final repo = await _getRepo();
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -49,12 +54,13 @@ class ExerciseProvider extends ChangeNotifier {
           name: name.trim(),
           category: category,
           muscleFocus: muscleFocus,
+          language: language,
           createdAt: now));
-      await load();
+      await load(language: language);
       return await repo.getById(id);
     } on DatabaseException catch (e) {
       if (e.isUniqueConstraintError()) {
-        _duplicateError = 'An exercise named "${name.trim()}" already exists.';
+        _isDuplicate = true;
         notifyListeners();
       } else {
         _error = e.toString();
@@ -80,7 +86,7 @@ class ExerciseProvider extends ChangeNotifier {
   }
 
   void clearDuplicateError() {
-    _duplicateError = null;
+    _isDuplicate = false;
     notifyListeners();
   }
 }

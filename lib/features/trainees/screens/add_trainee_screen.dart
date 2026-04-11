@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/trainee_provider.dart';
 
@@ -35,8 +36,9 @@ class _AddTraineeScreenState extends State<AddTraineeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('New Trainee')),
+      appBar: AppBar(title: Text(l10n.newTrainee)),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -45,20 +47,20 @@ class _AddTraineeScreenState extends State<AddTraineeScreen> {
             TextFormField(
               controller: _nameCtrl,
               autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Name *',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.fieldName,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                  (v == null || v.trim().isEmpty) ? l10n.fieldNameRequired : null,
               textCapitalization: TextCapitalization.words,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _notesCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.fieldNotes,
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               maxLines: 4,
@@ -73,7 +75,7 @@ class _AddTraineeScreenState extends State<AddTraineeScreen> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save'),
+                  : Text(l10n.save),
             ),
           ],
         ),

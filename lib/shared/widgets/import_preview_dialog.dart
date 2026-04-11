@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 
 import '../../core/services/export_import_service.dart';
 
@@ -18,6 +19,7 @@ class _ImportPreviewDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final traineeNames = preview.traineeNames;
     final showMoreTrainees =
@@ -29,7 +31,7 @@ class _ImportPreviewDialog extends StatelessWidget {
     final existEx = preview.existingExerciseNames;
 
     return AlertDialog(
-      title: const Text('Import Preview'),
+      title: Text(l10n.importPreviewTitle),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -38,48 +40,45 @@ class _ImportPreviewDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${preview.traineeCount} trainee${preview.traineeCount == 1 ? '' : 's'} will be imported:',
+                l10n.importPreviewTrainees(preview.traineeCount),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 4),
               ...visibleTrainees.map((n) => _BulletItem(n)),
               if (showMoreTrainees > 0)
-                _BulletItem(
-                  'and $showMoreTrainees more…',
-                  muted: true,
-                ),
+                _BulletItem(l10n.importPreviewAndMore(showMoreTrainees), muted: true),
               const Divider(height: 24),
               if (newEx.isEmpty && existEx.isEmpty)
                 Text(
-                  'No exercises referenced.',
+                  l10n.importPreviewNoExercises,
                   style: theme.textTheme.bodySmall
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
               if (newEx.isNotEmpty) ...[
                 Text(
-                  '${newEx.length} new exercise${newEx.length == 1 ? '' : 's'} will be created:',
+                  l10n.importPreviewNewExercises(newEx.length),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
-                ..._limitedBullets(newEx, theme),
+                ..._limitedBullets(newEx, l10n),
               ],
               if (existEx.isNotEmpty) ...[
                 if (newEx.isNotEmpty) const SizedBox(height: 12),
                 Text(
-                  '${existEx.length} exercise${existEx.length == 1 ? '' : 's'} already exist and will be reused:',
+                  l10n.importPreviewExistingExercises(existEx.length),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
-                ..._limitedBullets(existEx, theme, muted: true),
+                ..._limitedBullets(existEx, l10n, muted: true),
               ],
               const Divider(height: 24),
               Text(
-                'This cannot be undone.',
+                l10n.importPreviewWarning,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
                 ),
@@ -91,24 +90,24 @@ class _ImportPreviewDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Import'),
+          child: Text(l10n.importButton),
         ),
       ],
     );
   }
 
-  List<Widget> _limitedBullets(List<String> names, ThemeData theme,
+  List<Widget> _limitedBullets(List<String> names, AppLocalizations l10n,
       {bool muted = false}) {
     const max = 10;
     final visible = names.length > max ? names.take(max).toList() : names;
     final overflow = names.length > max ? names.length - max : 0;
     return [
       ...visible.map((n) => _BulletItem(n, muted: muted)),
-      if (overflow > 0) _BulletItem('and $overflow more…', muted: true),
+      if (overflow > 0) _BulletItem(l10n.importPreviewAndMore(overflow), muted: true),
     ];
   }
 }

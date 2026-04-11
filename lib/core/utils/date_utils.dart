@@ -2,6 +2,17 @@ import 'package:intl/intl.dart';
 
 final _dateFormat = DateFormat('yyyy-MM-dd');
 
+// A known Monday to use as anchor for locale-aware weekday formatting.
+final _anchorMonday = DateTime(2023, 1, 2);
+
+String weekdayNameLocalized(int weekday, String locale) {
+  return DateFormat('EEEE', locale).format(_anchorMonday.add(Duration(days: weekday)));
+}
+
+String weekdayShortLocalized(int weekday, String locale) {
+  return DateFormat('E', locale).format(_anchorMonday.add(Duration(days: weekday)));
+}
+
 String toDateString(DateTime date) => _dateFormat.format(date);
 
 DateTime fromDateString(String s) => _dateFormat.parse(s);

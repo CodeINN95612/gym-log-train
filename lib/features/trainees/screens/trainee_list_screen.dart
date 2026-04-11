@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../providers/trainee_provider.dart';
 import '../../../core/services/export_import_service.dart';
 import '../../../shared/widgets/import_preview_dialog.dart';
 import '../../about/screens/about_screen.dart';
+import '../../settings/screens/settings_screen.dart';
 import 'add_trainee_screen.dart';
 import 'trainee_overview_screen.dart';
 
@@ -24,38 +26,40 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
   }
 
   Future<void> _handleExportAll() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ExportImportService().exportAllTrainees();
     } on ExportException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Export failed: ${e.message}'),
+        content: Text(l10n.exportFailed(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
     }
   }
 
   Future<void> _handleImport() async {
+    final l10n = AppLocalizations.of(context)!;
     ImportPreview? preview;
     try {
       preview = await ExportImportService().pickAndPreviewImport();
     } on ImportException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Could not read file: ${e.message}'),
+        content: Text(l10n.couldNotReadFile(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -69,11 +73,11 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(children: [
-          CircularProgressIndicator(),
-          SizedBox(width: 16),
-          Text('Importing…'),
+          const CircularProgressIndicator(),
+          const SizedBox(width: 16),
+          Text(l10n.importing),
         ]),
       ),
     );
@@ -85,7 +89,7 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
       if (mounted) Navigator.pop(context);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Import failed: ${e.message}'),
+        content: Text(l10n.importFailed(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -93,7 +97,7 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
       if (mounted) Navigator.pop(context);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -104,23 +108,22 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
 
     if (mounted) {
       final exMsg = result.exercisesCreated > 0
-          ? ', created ${result.exercisesCreated} exercise(s)'
+          ? l10n.importCreatedExercises(result.exercisesCreated)
           : '';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Imported ${result.traineesImported} trainee(s)$exMsg.'),
-        ),
+        SnackBar(content: Text(l10n.importSuccess(result.traineesImported, exMsg))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<TraineeProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Trainees'),
+        title: Text(l10n.navTrainees),
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -129,6 +132,13 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
                   await _handleExportAll();
                 case 'import':
                   await _handleImport();
+                case 'settings':
+                  if (mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  }
                 case 'about':
                   if (mounted) {
                     Navigator.push(
@@ -138,25 +148,33 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
                   }
               }
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'export_all',
                 child: ListTile(
-                  leading: Icon(Icons.upload_file),
-                  title: Text('Export All'),
+                  leading: const Icon(Icons.upload_file),
+                  title: Text(l10n.menuExportAll),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
               PopupMenuItem(
                 value: 'import',
                 child: ListTile(
-                  leading: Icon(Icons.download),
-                  title: Text('Import'),
+                  leading: const Icon(Icons.download),
+                  title: Text(l10n.menuImport),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
-              PopupMenuDivider(),
-              PopupMenuItem(value: 'about', child: Text('About')),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'settings',
+                child: ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: Text(l10n.menuSettings),
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(value: 'about', child: Text(l10n.menuAbout)),
             ],
           ),
         ],
@@ -181,10 +199,10 @@ class _TraineeListScreenState extends State<TraineeListScreen> {
                           size: 64,
                           color: Theme.of(context).colorScheme.outline),
                       const SizedBox(height: 16),
-                      const Text(
-                        'No trainees yet.\nTap + to add one.',
+                      Text(
+                        l10n.noTrainees,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ],
                   ),

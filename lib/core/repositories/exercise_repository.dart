@@ -6,25 +6,29 @@ class ExerciseRepository {
 
   ExerciseRepository(this.db);
 
-  Future<List<Exercise>> getAll({String? search, String? category}) async {
-    String? where;
-    List<dynamic>? whereArgs;
+  Future<List<Exercise>> getAll({String? search, String? category, String? language}) async {
+    final conditions = <String>[];
+    final args = <dynamic>[];
 
-    if (search != null && search.isNotEmpty && category != null) {
-      where = 'LOWER(name) LIKE ? AND category = ?';
-      whereArgs = ['%${search.toLowerCase()}%', category];
-    } else if (search != null && search.isNotEmpty) {
-      where = 'LOWER(name) LIKE ?';
-      whereArgs = ['%${search.toLowerCase()}%'];
-    } else if (category != null) {
-      where = 'category = ?';
-      whereArgs = [category];
+    if (search != null && search.isNotEmpty) {
+      conditions.add('LOWER(name) LIKE ?');
+      args.add('%${search.toLowerCase()}%');
     }
+    if (category != null) {
+      conditions.add('category = ?');
+      args.add(category);
+    }
+    if (language != null) {
+      conditions.add('language = ?');
+      args.add(language);
+    }
+
+    final where = conditions.isEmpty ? null : conditions.join(' AND ');
 
     final rows = await db.query(
       'exercises',
       where: where,
-      whereArgs: whereArgs,
+      whereArgs: args.isEmpty ? null : args,
       orderBy: 'name ASC',
     );
     return rows.map(Exercise.fromMap).toList();

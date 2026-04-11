@@ -3,7 +3,7 @@ import 'package:path/path.dart';
 import 'migrations.dart';
 
 class DatabaseHelper {
-  static const int _currentVersion = 4;
+  static const int _currentVersion = 5;
   static DatabaseHelper? _instance;
   static Database? _db;
 

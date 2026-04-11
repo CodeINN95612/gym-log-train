@@ -8,7 +8,7 @@ Future<Database> openTestDatabase() async {
   final db = await databaseFactory.openDatabase(
     inMemoryDatabasePath,
     options: OpenDatabaseOptions(
-      version: 4,
+      version: 5,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },

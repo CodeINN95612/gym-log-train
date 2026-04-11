@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/exercise_categories.dart';
 import '../../../core/models/exercise.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../providers/exercise_provider.dart';
 
 class AddExerciseSheet extends StatefulWidget {
@@ -28,9 +30,11 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     final provider = context.read<ExerciseProvider>();
+    final lang = context.read<SettingsProvider>().language;
     provider.clearDuplicateError();
     final exercise = await provider.addExercise(
-        _nameCtrl.text, _selectedCategory, _selectedMuscleFocus);
+        _nameCtrl.text, _selectedCategory, _selectedMuscleFocus,
+        language: lang);
     if (!mounted) return;
     setState(() => _saving = false);
     if (exercise != null) Navigator.pop(context, exercise);
@@ -38,6 +42,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ExerciseProvider>();
 
     return Padding(
@@ -52,28 +57,28 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('New Exercise',
+              Text(l10n.newExercise,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameCtrl,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Name *',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldName,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                    (v == null || v.trim().isEmpty) ? l10n.fieldNameRequired : null,
                 onChanged: (_) {
-                  if (provider.duplicateError != null) {
+                  if (provider.isDuplicate) {
                     provider.clearDuplicateError();
                   }
                 },
               ),
-              if (provider.duplicateError != null) ...[
+              if (provider.isDuplicate) ...[
                 const SizedBox(height: 6),
                 Text(
-                  provider.duplicateError!,
+                  l10n.duplicateExercise(_nameCtrl.text.trim()),
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                       fontSize: 12),
@@ -82,10 +87,10 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Movement pattern',
-                  hintText: 'e.g. Push, Pull, Hinge…',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldMovementPattern,
+                  hintText: l10n.hintMovementPattern,
+                  border: const OutlineInputBorder(),
                 ),
                 items: kExerciseCategories
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -95,10 +100,10 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _selectedMuscleFocus,
-                decoration: const InputDecoration(
-                  labelText: 'Muscle focus',
-                  hintText: 'e.g. Chest, Quads, Hamstrings…',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.fieldMuscleFocus,
+                  hintText: l10n.hintMuscleFocus,
+                  border: const OutlineInputBorder(),
                 ),
                 items: kMuscleFocus
                     .map((m) => DropdownMenuItem(value: m, child: Text(m)))
@@ -111,7 +116,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
+                    child: Text(l10n.cancel),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -122,7 +127,7 @@ class _AddExerciseSheetState extends State<AddExerciseSheet> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Save'),
+                        : Text(l10n.save),
                   ),
                 ],
               ),

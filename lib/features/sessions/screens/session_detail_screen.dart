@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
@@ -51,6 +52,7 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sessionProvider = context.watch<SessionProvider>();
     final session = sessionProvider.activeSession;
     final isInProgress = session?.isInProgress ?? false;
@@ -62,10 +64,12 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(session != null ? 'Session ${session.date}' : 'Session'),
+            Text(session != null
+                ? l10n.sessionTitle(session.date)
+                : l10n.sessionTitleGeneric),
             if (session != null)
               Text(
-                isInProgress ? '● In Progress' : '✓ Completed',
+                isInProgress ? l10n.sessionInProgress : l10n.sessionCompleted,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -78,13 +82,12 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
           if (canDelete)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Delete session',
+              tooltip: l10n.tooltipDeleteSession,
               onPressed: () async {
                 final confirm = await showConfirmDialog(
                   context,
-                  title: 'Delete Session',
-                  content:
-                      'Delete this session and all its logged sets? This cannot be undone.',
+                  title: l10n.deleteSessionTitle,
+                  content: l10n.deleteSessionContent,
                 );
                 if (confirm && context.mounted) {
                   await context
@@ -104,14 +107,15 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
                 Expanded(
                   child: ListView(
                     children: [
-                      if (sessionProvider.sessionExercises.isEmpty && !sessionProvider.isLoading)
-                        const Padding(
-                          padding: EdgeInsets.all(32),
+                      if (sessionProvider.sessionExercises.isEmpty &&
+                          !sessionProvider.isLoading)
+                        Padding(
+                          padding: const EdgeInsets.all(32),
                           child: Center(
                             child: Text(
-                              'No exercises added yet.\nTap "Add Exercise" to start.',
+                              l10n.noExercisesInSession,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Colors.grey),
                             ),
                           ),
                         ),
@@ -141,7 +145,7 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.add),
-                        label: const Text('Add Exercise'),
+                        label: Text(l10n.addExercise),
                         onPressed: () async {
                           final ex =
                               await showExercisePickerSheet(context);
@@ -158,7 +162,7 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
                     Expanded(
                       child: FilledButton.icon(
                         icon: const Icon(Icons.stop_circle_outlined),
-                        label: const Text('End Session'),
+                        label: Text(l10n.endSession),
                         style: FilledButton.styleFrom(
                           backgroundColor:
                               Theme.of(context).colorScheme.error,
@@ -166,9 +170,9 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
                         onPressed: () async {
                           final confirm = await showConfirmDialog(
                             context,
-                            title: 'End Session',
-                            content: 'Mark this session as completed?',
-                            confirmLabel: 'End Session',
+                            title: l10n.endSession,
+                            content: l10n.endSessionContent,
+                            confirmLabel: l10n.endSession,
                             confirmColor:
                                 Theme.of(context).colorScheme.primary,
                           );

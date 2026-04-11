@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/models/trainee.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/repositories/plan_repository.dart';
 import '../../../core/utils/date_utils.dart' as du;
 import '../../../features/trainees/providers/trainee_provider.dart';
@@ -49,43 +51,50 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
     if (mounted) setState(() => _summaries = summaries);
   }
 
-  String _formatSummary(List<Map<String, int>> days) {
-    if (days.isEmpty) return 'No plan configured';
+  String _formatSummary(
+      List<Map<String, int>> days, String lang, AppLocalizations l10n) {
+    if (days.isEmpty) return l10n.noPlanConfigured;
     final totalExercises = days.fold(0, (sum, d) => sum + d['count']!);
-    final dayNames = days.map((d) => du.weekdayName(d['weekday']!)).join(', ');
-    return '$dayNames · $totalExercises exercise${totalExercises == 1 ? '' : 's'}';
+    final dayNames =
+        days.map((d) => du.weekdayNameLocalized(d['weekday']!, lang)).join(', ');
+    return '$dayNames · ${l10n.exerciseCount(totalExercises)}';
   }
 
   Future<void> _clone(Trainee source) async {
+    final planProvider = context.read<PlanProvider>();
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clone plan?'),
-        content: Text(
-          'This will replace ${widget.currentTrainee.name}\'s entire plan with ${source.name}\'s plan.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Clone'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx)!;
+        return AlertDialog(
+          title: Text(l10n.clonePlanDialogTitle),
+          content: Text(l10n.clonePlanDialogContent(
+              widget.currentTrainee.name, source.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.clone),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirm != true || !mounted) return;
 
     setState(() => _cloning = true);
-    await context.read<PlanProvider>().cloneFrom(source.id!);
+    await planProvider.cloneFrom(source.id!);
     if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = context.read<SettingsProvider>().language;
     final trainees = context
         .watch<TraineeProvider>()
         .trainees
@@ -114,14 +123,14 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
             child: Text(
-              'Clone plan from…',
+              l10n.clonePlanTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Text(
-              'Replaces ${widget.currentTrainee.name}\'s current plan.',
+              l10n.clonePlanSubtitle(widget.currentTrainee.name),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -134,9 +143,9 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (trainees.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('No other trainees found.')),
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(child: Text(l10n.noOtherTrainees)),
             )
           else
             ConstrainedBox(
@@ -156,9 +165,9 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
                     title: Text(trainee.name,
                         style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: _summaries == null
-                        ? const Text('Loading…')
+                        ? Text(l10n.loadingEllipsis)
                         : Text(
-                            _formatSummary(days),
+                            _formatSummary(days, lang, l10n),
                             style: TextStyle(
                               color: hasplan
                                   ? null
@@ -174,7 +183,7 @@ class _ClonePlanSheetState extends State<_ClonePlanSheet> {
                         ? const Icon(Icons.arrow_forward_ios, size: 16)
                         : null,
                     enabled: hasplan,
-                    onTap: hasplan ? () => _clone(trainee) : null,
+                    onTap: hasplan ? () => _clone(context, trainee) : null,
                   );
                 },
               ),

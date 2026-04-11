@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'core/providers/settings_provider.dart';
 import 'features/exercises/screens/exercise_library_screen.dart';
 import 'features/trainees/screens/trainee_list_screen.dart';
 
@@ -7,9 +10,13 @@ class GymTrainLogApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<SettingsProvider>().locale;
     return MaterialApp(
       title: 'GymTrainLog',
       debugShowCheckedModeBanner: false,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
@@ -39,6 +46,7 @@ class _RootScaffoldState extends State<_RootScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -47,16 +55,16 @@ class _RootScaffoldState extends State<_RootScaffold> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Trainees',
+            icon: const Icon(Icons.people_outline),
+            selectedIcon: const Icon(Icons.people),
+            label: l10n.navTrainees,
           ),
           NavigationDestination(
-            icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center),
-            label: 'Exercises',
+            icon: const Icon(Icons.fitness_center_outlined),
+            selectedIcon: const Icon(Icons.fitness_center),
+            label: l10n.navExercises,
           ),
         ],
       ),

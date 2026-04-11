@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/exercise_categories.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../shared/widgets/category_badge.dart';
 import '../providers/exercise_provider.dart';
 import 'add_exercise_screen.dart';
@@ -20,7 +22,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExerciseProvider>().load();
+      final lang = context.read<SettingsProvider>().language;
+      context.read<ExerciseProvider>().load(language: lang);
     });
   }
 
@@ -31,18 +34,21 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> {
   }
 
   void _applyFilters() {
+    final lang = context.read<SettingsProvider>().language;
     context.read<ExerciseProvider>().load(
           search: _searchCtrl.text,
           category: _selectedCategory,
+          language: lang,
         );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ExerciseProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Exercises')),
+      appBar: AppBar(title: Text(l10n.appBarExercises)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showAddExerciseSheet(context),
         child: const Icon(Icons.add),
@@ -54,7 +60,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search exercises…',
+                hintText: l10n.searchExercises,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -83,7 +89,7 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: const Text('All'),
+                    label: Text(l10n.filterAll),
                     selected: _selectedCategory == null,
                     onSelected: (_) {
                       setState(() => _selectedCategory = null);
@@ -111,8 +117,8 @@ class _ExerciseLibraryScreenState extends State<ExerciseLibraryScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : provider.exercises.isEmpty
-                    ? const Center(
-                        child: Text('No exercises found.\nTap + to add one.',
+                    ? Center(
+                        child: Text(l10n.noExercisesFound,
                             textAlign: TextAlign.center),
                       )
                     : ListView.separated(

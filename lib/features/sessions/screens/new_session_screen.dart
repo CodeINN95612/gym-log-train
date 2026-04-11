@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/date_utils.dart' as du;
 import '../../plan/providers/plan_provider.dart';
 import '../providers/session_provider.dart';
@@ -15,7 +17,8 @@ class NewSessionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final weekdayIndex = du.dartWeekdayToIndex(today);
-    final weekdayLabel = du.weekdayName(weekdayIndex);
+    final lang = context.read<SettingsProvider>().language;
+    final weekdayLabel = du.weekdayNameLocalized(weekdayIndex, lang);
 
     return MultiProvider(
       providers: [
@@ -43,8 +46,7 @@ class _NewSessionBody extends StatelessWidget {
     required this.weekdayLabel,
   });
 
-  Future<void> _startSession(
-      BuildContext context, int? planDayId) async {
+  Future<void> _startSession(BuildContext context, int? planDayId) async {
     final sessionProvider = context.read<SessionProvider>();
     final sessionId = await sessionProvider.startSession(planDayId: planDayId);
     if (!context.mounted) return;
@@ -64,13 +66,14 @@ class _NewSessionBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final planProvider = context.watch<PlanProvider>();
     final planDay = planProvider.planDayForWeekday(weekdayIndex);
     final planExercises =
         planDay != null ? planProvider.exercisesForDay(planDay.id!) : [];
 
     return Scaffold(
-      appBar: AppBar(title: Text('New Session — $weekdayLabel')),
+      appBar: AppBar(title: Text(l10n.newSessionTitle(weekdayLabel))),
       body: planProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -84,7 +87,7 @@ class _NewSessionBody extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Today's Plan",
+                            l10n.todaysPlan,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -94,7 +97,7 @@ class _NewSessionBody extends StatelessWidget {
                           Text(
                             planDay.label?.isNotEmpty == true
                                 ? planDay.label!
-                                : '${planExercises.length} exercise${planExercises.length == 1 ? '' : 's'}',
+                                : l10n.exerciseCount(planExercises.length),
                             style: const TextStyle(color: Colors.grey),
                           ),
                           const SizedBox(height: 12),
@@ -102,7 +105,7 @@ class _NewSessionBody extends StatelessWidget {
                             width: double.infinity,
                             child: FilledButton.icon(
                               icon: const Icon(Icons.playlist_play),
-                              label: const Text("Use Today's Plan"),
+                              label: Text(l10n.useTodaysPlan),
                               onPressed: () =>
                                   _startSession(context, planDay.id),
                             ),
@@ -120,23 +123,23 @@ class _NewSessionBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Ad-hoc Session',
+                          l10n.adHocSession,
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Start with an empty session and add exercises as you go.',
-                          style: TextStyle(color: Colors.grey),
+                        Text(
+                          l10n.adHocDescription,
+                          style: const TextStyle(color: Colors.grey),
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             icon: const Icon(Icons.add_circle_outline),
-                            label: const Text('Start Blank Session'),
+                            label: Text(l10n.startBlankSession),
                             onPressed: () => _startSession(context, null),
                           ),
                         ),

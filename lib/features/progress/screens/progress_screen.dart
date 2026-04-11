@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
@@ -13,21 +14,22 @@ class ProgressScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ProgressProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: Text('${trainee.name}\'s Progress')),
+      appBar: AppBar(title: Text(l10n.progressTitle(trainee.name))),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.sessionCount == 0
-              ? const Center(child: Text('No session data yet.'))
+              ? Center(child: Text(l10n.noSessionData))
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
                     _StatsStrip(provider: provider),
                     const SizedBox(height: 24),
                     if (provider.prCards.isNotEmpty) ...[
-                      Text('Personal Records',
+                      Text(l10n.personalRecords,
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       SizedBox(
@@ -44,7 +46,7 @@ class ProgressScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                     ],
                     if (provider.distinctExercises.isNotEmpty) ...[
-                      Text('Exercise Progress',
+                      Text(l10n.exerciseProgressTitle,
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       _ExerciseSelector(provider: provider),
@@ -66,18 +68,19 @@ class _StatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         child: Row(
           children: [
-            _stat(context, '${provider.sessionCount}', 'Sessions'),
+            _stat(context, '${provider.sessionCount}', l10n.statSessions),
             _divider(theme),
-            _stat(context, '${provider.exerciseCount}', 'Exercises'),
+            _stat(context, '${provider.exerciseCount}', l10n.statExercises),
             if (provider.firstDate != null) ...[
               _divider(theme),
-              _stat(context, _formatDate(provider.firstDate!), 'Since'),
+              _stat(context, _formatDate(provider.firstDate!), l10n.statSince),
             ],
           ],
         ),
@@ -152,15 +155,15 @@ class _MetricSelector extends StatelessWidget {
 
   const _MetricSelector({required this.provider});
 
-  static const _labels = {
-    ProgressMetric.weight: 'Weight',
-    ProgressMetric.reps: 'Reps',
-    ProgressMetric.estimated1rm: 'Est. 1RM',
-    ProgressMetric.duration: 'Duration',
-  };
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final labels = {
+      ProgressMetric.weight: l10n.metricWeight,
+      ProgressMetric.reps: l10n.metricReps,
+      ProgressMetric.estimated1rm: l10n.metricEstimated1rm,
+      ProgressMetric.duration: l10n.metricDuration,
+    };
     final available = provider.availableMetrics();
     if (available.isEmpty) return const SizedBox.shrink();
 
@@ -169,7 +172,7 @@ class _MetricSelector extends StatelessWidget {
       children: ProgressMetric.values
           .where((m) => available.contains(m))
           .map((m) => ChoiceChip(
-                label: Text(_labels[m]!),
+                label: Text(labels[m]!),
                 selected: provider.selectedMetric == m,
                 onSelected: (_) => provider.selectMetric(m),
               ))
@@ -185,11 +188,12 @@ class _ProgressChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final points = provider.chartPoints;
     if (points.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No data for this metric.')),
+        child: Center(child: Text(l10n.noDataForMetric)),
       );
     }
 

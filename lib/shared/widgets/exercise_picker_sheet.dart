@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../core/models/exercise.dart';
+import '../../core/providers/settings_provider.dart';
 import '../../features/exercises/providers/exercise_provider.dart';
 import '../../features/exercises/screens/add_exercise_screen.dart';
 import 'category_badge.dart';
@@ -32,7 +34,8 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExerciseProvider>().load();
+      final lang = context.read<SettingsProvider>().language;
+      context.read<ExerciseProvider>().load(language: lang);
     });
   }
 
@@ -44,6 +47,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<ExerciseProvider>();
     final filtered = provider.exercises.where((e) {
       if (_search.isEmpty) return true;
@@ -74,10 +78,10 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                   child: TextField(
                     controller: _searchController,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Search exercises…',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: l10n.searchExercises,
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (v) => setState(() => _search = v),
@@ -86,7 +90,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                 const SizedBox(width: 8),
                 FilledButton.icon(
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('New'),
+                  label: Text(l10n.newExerciseButton),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 12),
@@ -105,7 +109,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
             child: filtered.isEmpty
-                ? const Center(child: Text('No exercises found'))
+                ? Center(child: Text(l10n.noExercisesInPicker))
                 : ListView.builder(
                     itemCount: filtered.length,
                     itemBuilder: (_, i) {

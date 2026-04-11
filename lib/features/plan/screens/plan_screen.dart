@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/date_utils.dart' as du;
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/exercise_picker_sheet.dart';
@@ -21,15 +23,17 @@ class _PlanScreenState extends State<PlanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = context.read<SettingsProvider>().language;
     final provider = context.watch<PlanProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.trainee.name}\'s Plan'),
+        title: Text(l10n.planTitle(widget.trainee.name)),
         actions: [
           IconButton(
             icon: const Icon(Icons.copy_all_outlined),
-            tooltip: 'Clone from another trainee',
+            tooltip: l10n.tooltipClonePlan,
             onPressed: () => showClonePlanSheet(context, widget.trainee),
           ),
         ],
@@ -39,7 +43,7 @@ class _PlanScreenState extends State<PlanScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(
-              'Tap an inactive day to enable it. Tap an active day to expand/collapse.',
+              l10n.planInstruction,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
@@ -81,7 +85,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                 }
                               },
                               leading: Text(
-                                du.weekdayName(i),
+                                du.weekdayNameLocalized(i, lang),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: isActive
@@ -92,9 +96,9 @@ class _PlanScreenState extends State<PlanScreen> {
                               title: isActive
                                   ? Text(day.label?.isNotEmpty == true
                                       ? day.label!
-                                      : '${exercises.length} exercise${exercises.length == 1 ? '' : 's'}')
-                                  : const Text('Rest',
-                                      style: TextStyle(
+                                      : l10n.exerciseCount(exercises.length))
+                                  : Text(l10n.rest,
+                                      style: const TextStyle(
                                           color: Colors.grey,
                                           fontStyle: FontStyle.italic)),
                               trailing: isActive
@@ -123,7 +127,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                     Expanded(
                                       child: OutlinedButton.icon(
                                         icon: const Icon(Icons.add, size: 16),
-                                        label: const Text('Add Exercise'),
+                                        label: Text(l10n.addExercise),
                                         onPressed: () async {
                                           final ex =
                                               await showExercisePickerSheet(
@@ -139,7 +143,7 @@ class _PlanScreenState extends State<PlanScreen> {
                                     OutlinedButton.icon(
                                       icon: const Icon(Icons.delete_outline,
                                           size: 16),
-                                      label: const Text('Remove Day'),
+                                      label: Text(l10n.removeDay),
                                       style: OutlinedButton.styleFrom(
                                           foregroundColor: Theme.of(context)
                                               .colorScheme
@@ -147,9 +151,9 @@ class _PlanScreenState extends State<PlanScreen> {
                                       onPressed: () async {
                                         final confirm = await showConfirmDialog(
                                           context,
-                                          title: 'Remove Day',
-                                          content:
-                                              'Remove ${du.weekdayName(i)} from the plan?',
+                                          title: l10n.removeDay,
+                                          content: l10n.removeDayContent(
+                                              du.weekdayNameLocalized(i, lang)),
                                         );
                                         if (confirm && context.mounted) {
                                           setState(() =>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
 import '../providers/session_provider.dart';
@@ -11,14 +12,15 @@ class SessionHistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final provider = context.watch<SessionProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: Text('${trainee.name}\'s Sessions')),
+      appBar: AppBar(title: Text(l10n.sessionHistoryTitle(trainee.name))),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.sessions.isEmpty
-              ? const Center(child: Text('No sessions recorded yet.'))
+              ? Center(child: Text(l10n.noSessionsRecorded))
               : ListView.separated(
                   itemCount: provider.sessions.length,
                   separatorBuilder: (context, index) => const Divider(height: 1),
@@ -44,8 +46,8 @@ class SessionHistoryScreen extends StatelessWidget {
                       ),
                       title: Text(s.date),
                       subtitle: Text(s.isInProgress
-                          ? 'In Progress'
-                          : 'Completed'),
+                          ? l10n.inProgress
+                          : l10n.completed),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.push(
                         context,

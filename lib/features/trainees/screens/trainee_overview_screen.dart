@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
 import '../../../core/utils/date_utils.dart' as du;
+import '../../../core/providers/settings_provider.dart';
 import '../../plan/providers/plan_provider.dart';
 import '../../plan/screens/plan_screen.dart';
 import '../../sessions/providers/session_provider.dart';
@@ -42,38 +44,40 @@ class _TraineeOverviewBody extends StatelessWidget {
   const _TraineeOverviewBody({required this.trainee});
 
   Future<void> _handleExport(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ExportImportService().exportTrainee(trainee.id!);
     } on ExportException catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Export failed: ${e.message}'),
+        content: Text(l10n.exportFailed(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
     }
   }
 
   Future<void> _handleImport(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     ImportPreview? preview;
     try {
       preview = await ExportImportService().pickAndPreviewImport();
     } on ImportException catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Could not read file: ${e.message}'),
+        content: Text(l10n.couldNotReadFile(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -87,11 +91,11 @@ class _TraineeOverviewBody extends StatelessWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
+      builder: (_) => AlertDialog(
         content: Row(children: [
-          CircularProgressIndicator(),
-          SizedBox(width: 16),
-          Text('Importing…'),
+          const CircularProgressIndicator(),
+          const SizedBox(width: 16),
+          Text(l10n.importing),
         ]),
       ),
     );
@@ -103,7 +107,7 @@ class _TraineeOverviewBody extends StatelessWidget {
       if (context.mounted) Navigator.pop(context);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Import failed: ${e.message}'),
+        content: Text(l10n.importFailed(e.message)),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -111,7 +115,7 @@ class _TraineeOverviewBody extends StatelessWidget {
       if (context.mounted) Navigator.pop(context);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Unexpected error: $e'),
+        content: Text(l10n.unexpectedError(e.toString())),
         backgroundColor: Theme.of(context).colorScheme.error,
       ));
       return;
@@ -120,19 +124,18 @@ class _TraineeOverviewBody extends StatelessWidget {
     if (context.mounted) Navigator.pop(context);
     if (context.mounted) {
       final exMsg = result.exercisesCreated > 0
-          ? ', created ${result.exercisesCreated} exercise(s)'
+          ? l10n.importCreatedExercises(result.exercisesCreated)
           : '';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Imported ${result.traineesImported} trainee(s)$exMsg.'),
-        ),
+        SnackBar(content: Text(l10n.importSuccess(result.traineesImported, exMsg))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final lang = context.read<SettingsProvider>().language;
     final planProvider = context.watch<PlanProvider>();
     final sessionProvider = context.watch<SessionProvider>();
 
@@ -144,24 +147,23 @@ class _TraineeOverviewBody extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.ios_share),
-            tooltip: 'Export trainee',
+            tooltip: l10n.tooltipExportTrainee,
             onPressed: () => _handleExport(context),
           ),
           IconButton(
             icon: const Icon(Icons.download),
-            tooltip: 'Import trainee',
+            tooltip: l10n.tooltipImportTrainee,
             onPressed: () => _handleImport(context),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Delete trainee',
+            tooltip: l10n.tooltipDeleteTrainee,
             onPressed: () async {
               final confirm = await showConfirmDialog(
                 context,
-                title: 'Delete Trainee',
-                content:
-                    'Delete "${trainee.name}" and all their sessions and plan data? This cannot be undone.',
-                confirmLabel: 'Delete',
+                title: l10n.deleteTraineeTitle,
+                content: l10n.deleteTraineeContent(trainee.name),
+                confirmLabel: l10n.delete,
               );
               if (confirm && context.mounted) {
                 await context
@@ -185,13 +187,12 @@ class _TraineeOverviewBody extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          // Action buttons
           Row(
             children: [
               Expanded(
                 child: FilledButton.icon(
                   icon: const Icon(Icons.play_arrow),
-                  label: const Text('Start Session'),
+                  label: Text(l10n.startSession),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -207,7 +208,7 @@ class _TraineeOverviewBody extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.bar_chart),
-                  label: const Text('Progress'),
+                  label: Text(l10n.progress),
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -224,11 +225,10 @@ class _TraineeOverviewBody extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Weekly plan summary
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Weekly Plan',
+              Text(l10n.weeklyPlan,
                   style: Theme.of(context).textTheme.titleMedium),
               TextButton(
                 onPressed: () => Navigator.push(
@@ -240,21 +240,20 @@ class _TraineeOverviewBody extends StatelessWidget {
                     ),
                   ),
                 ),
-                child: const Text('Edit'),
+                child: Text(l10n.edit),
               ),
             ],
           ),
           planProvider.isLoading
               ? const LinearProgressIndicator()
-              : _WeeklyPlanSummary(planProvider: planProvider),
+              : _WeeklyPlanSummary(planProvider: planProvider, lang: lang),
 
           const SizedBox(height: 24),
 
-          // Recent sessions
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Recent Sessions',
+              Text(l10n.recentSessions,
                   style: Theme.of(context).textTheme.titleMedium),
               TextButton(
                 onPressed: () => Navigator.push(
@@ -266,28 +265,29 @@ class _TraineeOverviewBody extends StatelessWidget {
                     ),
                   ),
                 ),
-                child: const Text('See All'),
+                child: Text(l10n.seeAll),
               ),
             ],
           ),
           if (sessionProvider.isLoading)
             const LinearProgressIndicator()
           else if (recentSessions.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('No sessions yet.', style: TextStyle(color: Colors.grey)),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(l10n.noSessionsYet,
+                  style: const TextStyle(color: Colors.grey)),
             )
           else
             ...recentSessions.map((s) => ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(s.date),
-                  subtitle: Text(s.isInProgress ? 'In Progress' : 'Completed'),
+                  subtitle: Text(s.isInProgress ? l10n.inProgress : l10n.completed),
                   trailing: s.isInProgress
-                      ? const Chip(
-                          label: Text('Active',
-                              style: TextStyle(fontSize: 11)),
+                      ? Chip(
+                          label: Text(l10n.active,
+                              style: const TextStyle(fontSize: 11)),
                           backgroundColor: Colors.orange,
-                          labelStyle: TextStyle(color: Colors.white),
+                          labelStyle: const TextStyle(color: Colors.white),
                           visualDensity: VisualDensity.compact,
                         )
                       : const Icon(Icons.chevron_right),
@@ -316,11 +316,13 @@ class _TraineeOverviewBody extends StatelessWidget {
 
 class _WeeklyPlanSummary extends StatelessWidget {
   final PlanProvider planProvider;
+  final String lang;
 
-  const _WeeklyPlanSummary({required this.planProvider});
+  const _WeeklyPlanSummary({required this.planProvider, required this.lang});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: List.generate(7, (i) {
         final day = planProvider.planDayForWeekday(i);
@@ -331,7 +333,7 @@ class _WeeklyPlanSummary extends StatelessWidget {
           leading: SizedBox(
             width: 40,
             child: Text(
-              du.weekdayShort(i),
+              du.weekdayShortLocalized(i, lang),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: day != null
@@ -344,8 +346,8 @@ class _WeeklyPlanSummary extends StatelessWidget {
             day != null
                 ? (day.label?.isNotEmpty == true
                     ? day.label!
-                    : '${exercises.length} exercise${exercises.length == 1 ? '' : 's'}')
-                : 'Rest',
+                    : l10n.exerciseCount(exercises.length))
+                : l10n.rest,
             style: TextStyle(
               color: day != null ? null : Colors.grey,
               fontStyle: day != null ? null : FontStyle.italic,

@@ -3,6 +3,7 @@ class Exercise {
   final String name;
   final String? category;    // movement pattern: Push, Pull, Hinge, Squat…
   final String? muscleFocus; // primary muscles: Chest, Quads, Hamstrings…
+  final String language;     // 'en' or 'es'
   final int createdAt;
 
   const Exercise({
@@ -10,6 +11,7 @@ class Exercise {
     required this.name,
     this.category,
     this.muscleFocus,
+    this.language = 'en',
     required this.createdAt,
   });
 
@@ -18,6 +20,7 @@ class Exercise {
         name: map['name'] as String,
         category: map['category'] as String?,
         muscleFocus: map['muscle_focus'] as String?,
+        language: map['language'] as String? ?? 'en',
         createdAt: map['created_at'] as int,
       );
 
@@ -26,6 +29,7 @@ class Exercise {
         'name': name,
         'category': category,
         'muscle_focus': muscleFocus,
+        'language': language,
         'created_at': createdAt,
       };
 
@@ -34,6 +38,7 @@ class Exercise {
     String? name,
     String? category,
     String? muscleFocus,
+    String? language,
     int? createdAt,
   }) =>
       Exercise(
@@ -41,6 +46,7 @@ class Exercise {
         name: name ?? this.name,
         category: category ?? this.category,
         muscleFocus: muscleFocus ?? this.muscleFocus,
+        language: language ?? this.language,
         createdAt: createdAt ?? this.createdAt,
       );
 }
