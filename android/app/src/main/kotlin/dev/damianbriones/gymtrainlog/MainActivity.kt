@@ -1,4 +1,4 @@
-package com.example.gym_train_log
+package dev.damianbriones.gymtrainlog
 
 import io.flutter.embedding.android.FlutterActivity
 
