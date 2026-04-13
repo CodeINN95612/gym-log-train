@@ -25,17 +25,21 @@ class SettingsScreen extends StatelessWidget {
                   ),
             ),
           ),
-          RadioListTile<String>(
-            title: Text(l10n.langEnglish),
-            value: 'en',
+          RadioGroup<String>(
             groupValue: settings.language,
             onChanged: (v) => _setLanguage(context, v!),
-          ),
-          RadioListTile<String>(
-            title: Text(l10n.langSpanish),
-            value: 'es',
-            groupValue: settings.language,
-            onChanged: (v) => _setLanguage(context, v!),
+            child: Column(
+              children: [
+                RadioListTile<String>(
+                  title: Text(l10n.langEnglish),
+                  value: 'en',
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.langSpanish),
+                  value: 'es',
+                ),
+              ],
+            ),
           ),
         ],
       ),

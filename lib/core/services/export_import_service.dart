@@ -357,7 +357,7 @@ class ExportImportService {
   /// Opens a file picker, parses the JSON, and returns a preview.
   /// Returns null if the user cancels.
   Future<ImportPreview?> pickAndPreviewImport() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );
