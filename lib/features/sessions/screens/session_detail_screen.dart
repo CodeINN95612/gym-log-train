@@ -5,9 +5,7 @@ import '../../../core/models/trainee.dart';
 import '../../../shared/widgets/confirm_dialog.dart';
 import '../../../shared/widgets/exercise_log_block.dart';
 import '../../../shared/widgets/exercise_picker_sheet.dart';
-import '../../../shared/widgets/rest_timer_widget.dart';
 import '../providers/session_provider.dart';
-import '../providers/timer_provider.dart';
 
 class SessionDetailScreen extends StatelessWidget {
   final int sessionId;
@@ -21,10 +19,7 @@ class SessionDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => TimerProvider(),
-      child: _SessionDetailBody(sessionId: sessionId, trainee: trainee),
-    );
+    return _SessionDetailBody(sessionId: sessionId, trainee: trainee);
   }
 }
 
@@ -103,7 +98,6 @@ class _SessionDetailBodyState extends State<_SessionDetailBody> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                if (isInProgress) const RestTimerWidget(),
                 Expanded(
                   child: ListView(
                     children: [

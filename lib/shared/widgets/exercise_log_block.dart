@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/models/session_exercise.dart';
 import '../../core/models/set_entry.dart';
 import '../../features/sessions/providers/session_provider.dart';
-import '../../features/sessions/providers/timer_provider.dart';
 import 'category_badge.dart' show ExerciseBadges;
 import 'confirm_dialog.dart';
 import 'set_row_widget.dart';
@@ -146,9 +145,6 @@ class ExerciseLogBlock extends StatelessWidget {
                     await context
                         .read<SessionProvider>()
                         .addSet(sessionExercise.id!);
-                    if (context.mounted) {
-                      context.read<TimerProvider>().start();
-                    }
                   },
                 ),
               ),
