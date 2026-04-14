@@ -740,6 +740,12 @@ abstract class AppLocalizations {
   /// **'Privacy Policy'**
   String get privacyPolicy;
 
+  /// No description provided for @donate.
+  ///
+  /// In en, this message translates to:
+  /// **'Support on Ko-fi'**
+  String get donate;
+
   /// No description provided for @appBarSettings.
   ///
   /// In en, this message translates to:

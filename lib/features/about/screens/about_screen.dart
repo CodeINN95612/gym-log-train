@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:gym_train_log/l10n/app_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _version = '';
 
   static const _repoUrl = 'https://github.com/CodeINN95612/gym-log-train';
   static const _siteUrl = 'https://codeirnn95612.github.io/gym-log-train';
   static const _privacyUrl = 'https://codeirnn95612.github.io/gym-log-train/privacy-policy';
+  static const _kofiUrl = 'https://ko-fi.com/codeinn95612';
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _version = 'v${info.version}');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +65,18 @@ class AboutScreen extends StatelessWidget {
                   mode: LaunchMode.externalApplication,
                 ),
               ),
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                icon: const Icon(Icons.favorite_outline),
+                label: Text(l10n.donate),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF29ABE0),
+                ),
+                onPressed: () => launchUrl(
+                  Uri.parse(_kofiUrl),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -71,7 +100,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'v1.5.0',
+                _version,
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall

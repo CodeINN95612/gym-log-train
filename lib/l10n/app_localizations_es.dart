@@ -384,6 +384,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get privacyPolicy => 'Política de Privacidad';
 
   @override
+  String get donate => 'Apoyar en Ko-fi';
+
+  @override
   String get appBarSettings => 'Configuración';
 
   @override
