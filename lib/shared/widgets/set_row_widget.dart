@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/models/set_entry.dart';
+import '../../core/utils/weight_utils.dart';
 import '../../features/sessions/providers/session_provider.dart';
 
 class SetRowWidget extends StatefulWidget {
@@ -31,6 +32,7 @@ class _SetRowWidgetState extends State<SetRowWidget> {
   late FocusNode _repsFocus;
   late FocusNode _weightFocus;
   late FocusNode _durationFocus;
+  WeightUnit _weightUnit = WeightUnit.kg;
 
   @override
   void initState() {
@@ -38,7 +40,9 @@ class _SetRowWidgetState extends State<SetRowWidget> {
     _repsCtrl = TextEditingController(
         text: widget.set.reps?.toString() ?? '');
     _weightCtrl = TextEditingController(
-        text: widget.set.weightKg?.toString() ?? '');
+        text: widget.set.weightKg != null
+            ? formatWeight(widget.set.weightKg, _weightUnit)
+            : '');
     _durationCtrl = TextEditingController(
         text: widget.set.durationSeconds?.toString() ?? '');
     _repsFocus = FocusNode()..addListener(_onRepsFocusChange);
@@ -54,7 +58,9 @@ class _SetRowWidgetState extends State<SetRowWidget> {
       _repsCtrl.text = widget.set.reps?.toString() ?? '';
     }
     if (!_weightFocus.hasFocus) {
-      _weightCtrl.text = widget.set.weightKg?.toString() ?? '';
+      _weightCtrl.text = widget.set.weightKg != null
+          ? formatWeight(widget.set.weightKg, _weightUnit)
+          : '';
     }
     if (!_durationFocus.hasFocus) {
       _durationCtrl.text = widget.set.durationSeconds?.toString() ?? '';
@@ -84,9 +90,29 @@ class _SetRowWidgetState extends State<SetRowWidget> {
     if (!_durationFocus.hasFocus) _saveSet();
   }
 
+  void _toggleWeightUnit() {
+    setState(() {
+      final raw = double.tryParse(_weightCtrl.text);
+      if (_weightUnit == WeightUnit.kg) {
+        _weightUnit = WeightUnit.lbs;
+        if (raw != null) {
+          _weightCtrl.text = roundTo1dp(raw * 2.20462).toStringAsFixed(1);
+        }
+      } else {
+        _weightUnit = WeightUnit.kg;
+        if (raw != null) {
+          _weightCtrl.text = roundTo1dp(raw * 0.453592).toStringAsFixed(1);
+        }
+      }
+    });
+  }
+
   void _saveSet() {
     final reps = int.tryParse(_repsCtrl.text);
-    final weight = double.tryParse(_weightCtrl.text);
+    final weightRaw = double.tryParse(_weightCtrl.text);
+    final weight = weightRaw != null
+        ? roundTo1dp(unitToKg(weightRaw, _weightUnit)!)
+        : null;
     final duration = int.tryParse(_durationCtrl.text);
     context.read<SessionProvider>().updateSet(widget.set.copyWith(
           reps: reps,
@@ -114,11 +140,41 @@ class _SetRowWidgetState extends State<SetRowWidget> {
         if (widget.showWeight) ...[
           const SizedBox(width: 8),
           Expanded(
-            child: _fieldInput(
-              controller: _weightCtrl,
-              focusNode: _weightFocus,
-              hint: 'kg',
-              readOnly: widget.readOnly,
+            child: Row(
+              children: [
+                Expanded(
+                  child: _fieldInput(
+                    controller: _weightCtrl,
+                    focusNode: _weightFocus,
+                    hint: unitLabel(_weightUnit),
+                    readOnly: widget.readOnly,
+                  ),
+                ),
+                if (!widget.readOnly) ...[
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: _toggleWeightUnit,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        unitLabel(_weightUnit),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

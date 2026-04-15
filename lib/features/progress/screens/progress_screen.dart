@@ -4,6 +4,7 @@ import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/trainee.dart';
+import '../../../core/utils/weight_utils.dart';
 import '../../../shared/widgets/pr_card.dart';
 import '../providers/progress_provider.dart';
 
@@ -39,8 +40,10 @@ class ProgressScreen extends StatelessWidget {
                           itemCount: provider.prCards.length,
                           separatorBuilder: (context, index) =>
                               const SizedBox(width: 8),
-                          itemBuilder: (_, i) =>
-                              PrCardWidget(pr: provider.prCards[i]),
+                          itemBuilder: (_, i) => PrCardWidget(
+                            pr: provider.prCards[i],
+                            unit: provider.weightUnit,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -50,7 +53,12 @@ class ProgressScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       _ExerciseSelector(provider: provider),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _UnitToggle(provider: provider),
+                      ),
+                      const SizedBox(height: 8),
                       _MetricSelector(provider: provider),
                       const SizedBox(height: 12),
                       _ProgressChart(provider: provider),
@@ -177,6 +185,24 @@ class _MetricSelector extends StatelessWidget {
                 onSelected: (_) => provider.selectMetric(m),
               ))
           .toList(),
+    );
+  }
+}
+
+class _UnitToggle extends StatelessWidget {
+  final ProgressProvider provider;
+
+  const _UnitToggle({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<WeightUnit>(
+      segments: const [
+        ButtonSegment(value: WeightUnit.kg, label: Text('kg')),
+        ButtonSegment(value: WeightUnit.lbs, label: Text('lbs')),
+      ],
+      selected: {provider.weightUnit},
+      onSelectionChanged: (selected) => provider.setWeightUnit(selected.first),
     );
   }
 }

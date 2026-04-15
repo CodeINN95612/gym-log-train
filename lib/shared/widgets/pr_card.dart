@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../core/utils/weight_utils.dart';
 import '../../features/progress/providers/progress_provider.dart';
 
 class PrCardWidget extends StatelessWidget {
   final PrCard pr;
+  final WeightUnit unit;
 
-  const PrCardWidget({super.key, required this.pr});
+  const PrCardWidget({
+    super.key,
+    required this.pr,
+    this.unit = WeightUnit.kg,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +33,11 @@ class PrCardWidget extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (pr.bestWeight != null)
-                _metricRow('Best Weight', '${pr.bestWeight!.toStringAsFixed(1)} kg'),
+                _metricRow('Best Weight',
+                    '${formatWeight(pr.bestWeight, unit)} ${unitLabel(unit)}'),
               if (pr.estimated1rm != null)
-                _metricRow('Est. 1RM', '${pr.estimated1rm!.toStringAsFixed(1)} kg'),
+                _metricRow('Est. 1RM',
+                    '${formatWeight(pr.estimated1rm, unit)} ${unitLabel(unit)}'),
               if (pr.bestReps != null)
                 _metricRow('Best Reps', '${pr.bestReps}'),
               if (pr.bestDuration != null)
