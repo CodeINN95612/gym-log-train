@@ -19,7 +19,13 @@ class ProgressScreen extends StatelessWidget {
     final provider = context.watch<ProgressProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.progressTitle(trainee.name))),
+      appBar: AppBar(
+        title: Text(l10n.progressTitle(trainee.name)),
+        actions: [
+          if (provider.sessionCount > 0)
+            _AppBarUnitToggle(provider: provider),
+        ],
+      ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : provider.sessionCount == 0
@@ -53,12 +59,7 @@ class ProgressScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
                       _ExerciseSelector(provider: provider),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: _UnitToggle(provider: provider),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       _MetricSelector(provider: provider),
                       const SizedBox(height: 12),
                       _ProgressChart(provider: provider),
@@ -189,20 +190,49 @@ class _MetricSelector extends StatelessWidget {
   }
 }
 
-class _UnitToggle extends StatelessWidget {
+class _AppBarUnitToggle extends StatelessWidget {
   final ProgressProvider provider;
 
-  const _UnitToggle({required this.provider});
+  const _AppBarUnitToggle({required this.provider});
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<WeightUnit>(
-      segments: const [
-        ButtonSegment(value: WeightUnit.kg, label: Text('kg')),
-        ButtonSegment(value: WeightUnit.lbs, label: Text('lbs')),
-      ],
-      selected: {provider.weightUnit},
-      onSelectionChanged: (selected) => provider.setWeightUnit(selected.first),
+    final fgColor =
+        Theme.of(context).appBarTheme.foregroundColor ??
+        Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _btn(context, 'kg', WeightUnit.kg, fgColor),
+          Text('|',
+              style: TextStyle(
+                  color: fgColor.withAlpha(80), fontWeight: FontWeight.w300)),
+          _btn(context, 'lbs', WeightUnit.lbs, fgColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _btn(BuildContext context, String label, WeightUnit unit, Color fg) {
+    final active = provider.weightUnit == unit;
+    return TextButton(
+      onPressed: active ? null : () => provider.setWeightUnit(unit),
+      style: TextButton.styleFrom(
+        foregroundColor: fg,
+        minimumSize: Size.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: active ? FontWeight.bold : FontWeight.normal,
+          color: active ? fg : fg.withAlpha(120),
+        ),
+      ),
     );
   }
 }

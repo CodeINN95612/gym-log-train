@@ -8,6 +8,7 @@ import '../../features/sessions/providers/session_provider.dart';
 class SetRowWidget extends StatefulWidget {
   final SetEntry set;
   final bool readOnly;
+  final WeightUnit weightUnit;
   final bool showWeight;
   final bool showReps;
   final bool showDuration;
@@ -16,6 +17,7 @@ class SetRowWidget extends StatefulWidget {
     super.key,
     required this.set,
     this.readOnly = false,
+    this.weightUnit = WeightUnit.kg,
     this.showWeight = true,
     this.showReps = true,
     this.showDuration = false,
@@ -32,7 +34,6 @@ class _SetRowWidgetState extends State<SetRowWidget> {
   late FocusNode _repsFocus;
   late FocusNode _weightFocus;
   late FocusNode _durationFocus;
-  WeightUnit _weightUnit = WeightUnit.kg;
 
   @override
   void initState() {
@@ -41,7 +42,7 @@ class _SetRowWidgetState extends State<SetRowWidget> {
         text: widget.set.reps?.toString() ?? '');
     _weightCtrl = TextEditingController(
         text: widget.set.weightKg != null
-            ? formatWeight(widget.set.weightKg, _weightUnit)
+            ? formatWeight(widget.set.weightKg, widget.weightUnit)
             : '');
     _durationCtrl = TextEditingController(
         text: widget.set.durationSeconds?.toString() ?? '');
@@ -53,13 +54,20 @@ class _SetRowWidgetState extends State<SetRowWidget> {
   @override
   void didUpdateWidget(SetRowWidget old) {
     super.didUpdateWidget(old);
-    // Only sync if not focused (avoid overwriting while typing)
     if (!_repsFocus.hasFocus) {
       _repsCtrl.text = widget.set.reps?.toString() ?? '';
     }
-    if (!_weightFocus.hasFocus) {
+    if (old.weightUnit != widget.weightUnit) {
+      // Unit changed — convert whatever is currently displayed, even if focused.
+      final raw = double.tryParse(_weightCtrl.text);
+      if (raw != null) {
+        final asKg = unitToKg(raw, old.weightUnit)!;
+        _weightCtrl.text = formatWeight(asKg, widget.weightUnit);
+      }
+    } else if (!_weightFocus.hasFocus) {
+      // Normal data sync — only skip if user is actively typing.
       _weightCtrl.text = widget.set.weightKg != null
-          ? formatWeight(widget.set.weightKg, _weightUnit)
+          ? formatWeight(widget.set.weightKg, widget.weightUnit)
           : '';
     }
     if (!_durationFocus.hasFocus) {
@@ -90,28 +98,11 @@ class _SetRowWidgetState extends State<SetRowWidget> {
     if (!_durationFocus.hasFocus) _saveSet();
   }
 
-  void _toggleWeightUnit() {
-    setState(() {
-      final raw = double.tryParse(_weightCtrl.text);
-      if (_weightUnit == WeightUnit.kg) {
-        _weightUnit = WeightUnit.lbs;
-        if (raw != null) {
-          _weightCtrl.text = roundTo1dp(raw * 2.20462).toStringAsFixed(1);
-        }
-      } else {
-        _weightUnit = WeightUnit.kg;
-        if (raw != null) {
-          _weightCtrl.text = roundTo1dp(raw * 0.453592).toStringAsFixed(1);
-        }
-      }
-    });
-  }
-
   void _saveSet() {
     final reps = int.tryParse(_repsCtrl.text);
     final weightRaw = double.tryParse(_weightCtrl.text);
     final weight = weightRaw != null
-        ? roundTo1dp(unitToKg(weightRaw, _weightUnit)!)
+        ? roundTo1dp(unitToKg(weightRaw, widget.weightUnit)!)
         : null;
     final duration = int.tryParse(_durationCtrl.text);
     context.read<SessionProvider>().updateSet(widget.set.copyWith(
@@ -140,41 +131,11 @@ class _SetRowWidgetState extends State<SetRowWidget> {
         if (widget.showWeight) ...[
           const SizedBox(width: 8),
           Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _fieldInput(
-                    controller: _weightCtrl,
-                    focusNode: _weightFocus,
-                    hint: unitLabel(_weightUnit),
-                    readOnly: widget.readOnly,
-                  ),
-                ),
-                if (!widget.readOnly) ...[
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: _toggleWeightUnit,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        unitLabel(_weightUnit),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+            child: _fieldInput(
+              controller: _weightCtrl,
+              focusNode: _weightFocus,
+              hint: unitLabel(widget.weightUnit),
+              readOnly: widget.readOnly,
             ),
           ),
         ],

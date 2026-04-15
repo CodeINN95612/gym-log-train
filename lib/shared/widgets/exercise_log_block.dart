@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/models/session_exercise.dart';
 import '../../core/models/set_entry.dart';
+import '../../core/utils/weight_utils.dart';
 import '../../features/sessions/providers/session_provider.dart';
 import 'category_badge.dart' show ExerciseBadges;
 import 'confirm_dialog.dart';
 import 'set_row_widget.dart';
 
-class ExerciseLogBlock extends StatelessWidget {
+class ExerciseLogBlock extends StatefulWidget {
   final SessionExercise sessionExercise;
   final List<SetEntry> sets;
   final bool readOnly;
@@ -22,21 +23,26 @@ class ExerciseLogBlock extends StatelessWidget {
   });
 
   @override
+  State<ExerciseLogBlock> createState() => _ExerciseLogBlockState();
+}
+
+class _ExerciseLogBlockState extends State<ExerciseLogBlock> {
+  WeightUnit _unit = WeightUnit.kg;
+
+  @override
   Widget build(BuildContext context) {
-    final ex = sessionExercise.exercise;
-    // When editing: always show all three columns so any metric can be filled in.
-    // When read-only (completed session): only show columns that have actual data.
+    final ex = widget.sessionExercise.exercise;
     final bool showWeight;
     final bool showReps;
     final bool showDuration;
-    if (!readOnly) {
+    if (!widget.readOnly) {
       showWeight = true;
       showReps = true;
       showDuration = true;
     } else {
-      showWeight = sets.any((s) => s.weightKg != null);
-      showReps = sets.any((s) => s.reps != null);
-      showDuration = sets.any((s) => s.durationSeconds != null);
+      showWeight = widget.sets.any((s) => s.weightKg != null);
+      showReps = widget.sets.any((s) => s.reps != null);
+      showDuration = widget.sets.any((s) => s.durationSeconds != null);
     }
 
     return Card(
@@ -46,7 +52,7 @@ class ExerciseLogBlock extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row
+            // Exercise name + delete button
             Row(
               children: [
                 Expanded(
@@ -68,7 +74,7 @@ class ExerciseLogBlock extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!readOnly)
+                if (!widget.readOnly)
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
                     tooltip: 'Remove exercise',
@@ -81,15 +87,15 @@ class ExerciseLogBlock extends StatelessWidget {
                       );
                       if (confirm && context.mounted) {
                         context.read<SessionProvider>().deleteSessionExercise(
-                              sessionExercise.id!,
-                              sessionId,
+                              widget.sessionExercise.id!,
+                              widget.sessionId,
                             );
                       }
                     },
                   ),
               ],
             ),
-            if (sets.isNotEmpty || !readOnly) ...[
+            if (widget.sets.isNotEmpty || !widget.readOnly) ...[
               const SizedBox(height: 8),
               // Column headers
               Row(
@@ -97,10 +103,11 @@ class ExerciseLogBlock extends StatelessWidget {
                   const SizedBox(width: 28),
                   if (showWeight) ...[
                     const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text('wt.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    Expanded(
+                      child: _UnitToggle(
+                        unit: _unit,
+                        onToggle: (u) => setState(() => _unit = u),
+                      ),
                     ),
                   ],
                   if (showReps) ...[
@@ -119,22 +126,23 @@ class ExerciseLogBlock extends StatelessWidget {
                           style: TextStyle(fontSize: 11, color: Colors.grey)),
                     ),
                   ],
-                  if (!readOnly) const SizedBox(width: 44),
+                  if (!widget.readOnly) const SizedBox(width: 44),
                 ],
               ),
               const SizedBox(height: 4),
-              ...sets.map((s) => Padding(
+              ...widget.sets.map((s) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: SetRowWidget(
                       set: s,
-                      readOnly: readOnly,
+                      readOnly: widget.readOnly,
+                      weightUnit: _unit,
                       showWeight: showWeight,
                       showReps: showReps,
                       showDuration: showDuration,
                     ),
                   )),
             ],
-            if (!readOnly) ...[
+            if (!widget.readOnly) ...[
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -144,12 +152,53 @@ class ExerciseLogBlock extends StatelessWidget {
                   onPressed: () async {
                     await context
                         .read<SessionProvider>()
-                        .addSet(sessionExercise.id!);
+                        .addSet(widget.sessionExercise.id!);
                   },
                 ),
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline kg / lbs toggle shown in the weight column header.
+class _UnitToggle extends StatelessWidget {
+  final WeightUnit unit;
+  final ValueChanged<WeightUnit> onToggle;
+
+  const _UnitToggle({required this.unit, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _label('kg', WeightUnit.kg, primary),
+        const Text(' · ',
+            style: TextStyle(fontSize: 11, color: Colors.grey)),
+        _label('lbs', WeightUnit.lbs, primary),
+      ],
+    );
+  }
+
+  Widget _label(String text, WeightUnit value, Color primary) {
+    final active = unit == value;
+    return GestureDetector(
+      onTap: active ? null : () => onToggle(value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            color: active ? primary : Colors.grey,
+          ),
         ),
       ),
     );
