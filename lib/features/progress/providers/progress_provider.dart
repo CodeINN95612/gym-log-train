@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/models/exercise.dart';
 import '../../../core/repositories/session_repository.dart';
+import '../../../core/utils/weight_utils.dart';
 
 enum ProgressMetric { weight, reps, estimated1rm, duration }
 
@@ -45,6 +47,7 @@ class ProgressProvider extends ChangeNotifier {
   List<ChartDataPoint> _chartPoints = [];
   bool _isLoading = false;
   String? _error;
+  WeightUnit _weightUnit = WeightUnit.kg;
 
   int get sessionCount => _sessionCount;
   int get exerciseCount => _exerciseCount;
@@ -56,6 +59,7 @@ class ProgressProvider extends ChangeNotifier {
   List<ChartDataPoint> get chartPoints => _chartPoints;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  WeightUnit get weightUnit => _weightUnit;
 
   ProgressProvider(this.traineeId);
 
@@ -74,6 +78,11 @@ class ProgressProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
+      final prefs = await SharedPreferences.getInstance();
+      _weightUnit = prefs.getString('weight_unit') == 'lbs'
+          ? WeightUnit.lbs
+          : WeightUnit.kg;
+
       final repo = await _getRepo();
 
       final stats = await repo.getStats(traineeId);
@@ -128,6 +137,14 @@ class ProgressProvider extends ChangeNotifier {
     await _loadChartData();
   }
 
+  Future<void> setWeightUnit(WeightUnit unit) async {
+    if (_weightUnit == unit) return;
+    _weightUnit = unit;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('weight_unit', unit == WeightUnit.kg ? 'kg' : 'lbs');
+    await _loadChartData(); // re-converts chart points; calls notifyListeners() internally
+  }
+
   Future<void> _loadChartData() async {
     if (_selectedExerciseId == null) return;
     try {
@@ -135,19 +152,27 @@ class ProgressProvider extends ChangeNotifier {
       final data = await repo.getProgressData(traineeId, _selectedExerciseId!);
       _chartPoints = data
           .map((dp) {
-            double? value;
+            double? valueKg;
             switch (_selectedMetric) {
               case ProgressMetric.weight:
-                value = dp.bestWeight;
+                valueKg = dp.bestWeight;
               case ProgressMetric.reps:
-                value = dp.bestReps?.toDouble();
+                valueKg = dp.bestReps?.toDouble();
               case ProgressMetric.estimated1rm:
-                value = dp.estimated1rm;
+                valueKg = dp.estimated1rm;
               case ProgressMetric.duration:
-                value = dp.bestDuration?.toDouble();
+                valueKg = dp.bestDuration?.toDouble();
             }
-            if (value == null) return null;
-            return ChartDataPoint(date: dp.date, value: value);
+            if (valueKg == null) return null;
+            // Apply unit conversion for weight-based metrics; reps/duration are unitless.
+            final double displayValue;
+            if (_selectedMetric == ProgressMetric.weight ||
+                _selectedMetric == ProgressMetric.estimated1rm) {
+              displayValue = roundTo1dp(kgToUnit(valueKg, _weightUnit)!);
+            } else {
+              displayValue = valueKg;
+            }
+            return ChartDataPoint(date: dp.date, value: displayValue);
           })
           .whereType<ChartDataPoint>()
           .toList();

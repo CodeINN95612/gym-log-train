@@ -98,7 +98,7 @@ class ExerciseLogBlock extends StatelessWidget {
                   if (showWeight) ...[
                     const SizedBox(width: 8),
                     const Expanded(
-                      child: Text('kg',
+                      child: Text('wt.',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 11, color: Colors.grey)),
                     ),
