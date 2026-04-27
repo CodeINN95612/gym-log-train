@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gym_train_log/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/models/exercise.dart';
 import '../../../core/models/trainee.dart';
 import '../../../core/utils/weight_utils.dart';
 import '../../../shared/widgets/pr_card.dart';
@@ -58,7 +59,7 @@ class ProgressScreen extends StatelessWidget {
                       Text(l10n.exerciseProgressTitle,
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
-                      _ExerciseSelector(provider: provider),
+                      _ExercisePickerButton(provider: provider),
                       const SizedBox(height: 12),
                       _MetricSelector(provider: provider),
                       const SizedBox(height: 12),
@@ -132,29 +133,180 @@ class _StatsStrip extends StatelessWidget {
   }
 }
 
-class _ExerciseSelector extends StatelessWidget {
+class _ExercisePickerButton extends StatelessWidget {
   final ProgressProvider provider;
 
-  const _ExerciseSelector({required this.provider});
+  const _ExercisePickerButton({required this.provider});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: provider.distinctExercises.length,
-        separatorBuilder: (_, index) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final ex = provider.distinctExercises[i];
-          final selected = provider.selectedExerciseId == ex.id;
-          return FilterChip(
-            label: Text(ex.name),
-            selected: selected,
-            onSelected: (_) => provider.selectExercise(ex.id!),
-          );
-        },
+    final selected = provider.distinctExercises
+        .where((e) => e.id == provider.selectedExerciseId)
+        .firstOrNull;
+
+    return InkWell(
+      onTap: () => showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (_) => _ExercisePickerSheet(provider: provider),
       ),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: Theme.of(context).colorScheme.outline.withAlpha(128)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                selected?.name ?? '',
+                style: Theme.of(context).textTheme.bodyLarge,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.expand_more,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExercisePickerSheet extends StatefulWidget {
+  final ProgressProvider provider;
+
+  const _ExercisePickerSheet({required this.provider});
+
+  @override
+  State<_ExercisePickerSheet> createState() => _ExercisePickerSheetState();
+}
+
+class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final exercises = widget.provider.distinctExercises;
+
+    final filtered = _query.isEmpty
+        ? exercises
+        : exercises
+            .where((e) =>
+                e.name.toLowerCase().contains(_query.toLowerCase()))
+            .toList();
+
+    // When searching show flat list; when browsing show category headers.
+    final items = _buildItems(filtered, showHeaders: _query.isEmpty);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (_, scrollCtrl) => Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              controller: _searchCtrl,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.searchExercises,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+              onChanged: (v) => setState(() => _query = v),
+            ),
+          ),
+          Expanded(
+            child: items.isEmpty
+                ? Center(child: Text(l10n.noExercisesInPicker))
+                : ListView.builder(
+                    controller: scrollCtrl,
+                    itemCount: items.length,
+                    itemBuilder: (_, i) => items[i],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildItems(List<Exercise> exercises, {required bool showHeaders}) {
+    if (!showHeaders) {
+      return exercises.map((ex) => _exerciseTile(ex)).toList();
+    }
+
+    final grouped = <String, List<Exercise>>{};
+    for (final e in exercises) {
+      grouped.putIfAbsent(e.category ?? '', () => []).add(e);
+    }
+    final categories = grouped.keys.toList()..sort();
+
+    final items = <Widget>[];
+    for (final cat in categories) {
+      if (cat.isNotEmpty) {
+        items.add(_categoryHeader(cat));
+      }
+      items.addAll(grouped[cat]!.map(_exerciseTile));
+    }
+    return items;
+  }
+
+  Widget _categoryHeader(String label) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 2),
+        child: Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+
+  Widget _exerciseTile(Exercise ex) {
+    final selected = widget.provider.selectedExerciseId == ex.id;
+    return ListTile(
+      title: Text(ex.name),
+      trailing: selected
+          ? Icon(Icons.check,
+              color: Theme.of(context).colorScheme.primary)
+          : null,
+      selected: selected,
+      onTap: () {
+        widget.provider.selectExercise(ex.id!);
+        Navigator.pop(context);
+      },
     );
   }
 }
